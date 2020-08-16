@@ -18,14 +18,33 @@ Ext.define('Card.controller.Main', {
     this.chekTotalCard();
     let cardInfo = this.onGetBaseCard();
     jsPlumbInstance.push(jsPlumb.getInstance({uuids: cardInfo.thisNumberInstance}));
-    jsPlumbInstance[cardInfo.thisNumberInstance].importDefaults({
-      Connector: ['Bezier', {
-        curviness: 150
-      }],
-      Anchors: ['BottomCenter', 'TopCenter']
-    });
+    jsPlumbInstance[cardInfo.thisNumberInstance].importDefaults(cardInfo.defaultsStyle);
   },
   onGetBaseCard: function() {
+    let defaultsStyle = {
+      Connector: ['Flowchart', {
+        curviness: 50
+      }],
+      Anchor: 'AutoDefault',
+      Endpoints : [[ 'Dot', { radius: 7 } ], [ 'Dot', { radius: 7 } ]],
+      EndpointStyles : [{ fill: '#225588' }, { fill: '#558822' }],
+      ConnectionOverlays: [
+        ['Arrow', {
+          location: 1,
+          id: 'arrow',
+          length: 20,
+          foldback: .8
+        }]
+      ],
+      PaintStyle : {
+        strokeWidth: 2,
+        stroke: '#225588'
+      },
+      HoverPaintStyle: {
+        strokeStyle: '#1e8151',
+        lineWidth: 2
+      }
+    };
     let baseCard = Ext.ComponentQuery.query('#baseCard')[0];
     let baseLayout = baseCard.getLayout();
     let activeCardId = baseLayout.getActiveItem().id;
@@ -43,7 +62,8 @@ Ext.define('Card.controller.Main', {
       totalCard: totalCard,
       newCardNumber: newCardNumber,
       activeCardEl: activeCardEl,
-      thisNumberInstance: thisNumberInstance
+      thisNumberInstance: thisNumberInstance,
+      defaultsStyle: defaultsStyle
     }
     return getBaseCard;
   },
@@ -79,12 +99,7 @@ Ext.define('Card.controller.Main', {
     this.chekTotalCard();
     cardInfo = this.onGetBaseCard();
     jsPlumbInstance.push(jsPlumb.getInstance({uuids: cardInfo.thisNumberInstance}));
-    jsPlumbInstance[cardInfo.thisNumberInstance].importDefaults({
-      Connector: ['Bezier', {
-        curviness: 150
-      }],
-      Anchors: ['BottomCenter', 'TopCenter']
-    });
+    jsPlumbInstance[cardInfo.thisNumberInstance].importDefaults(cardInfo.defaultsStyle);
     console.log(jsPlumbInstance)
   },
   onDelCard: function() {
@@ -101,9 +116,14 @@ Ext.define('Card.controller.Main', {
         jsPlumbInstance[cardInfo.thisNumberInstance].remove($('.svgDescription-'+cardInfo.activeCard));
         console.log(jsPlumbInstance[cardInfo.thisNumberInstance].getManagedElements())
       }
-      jsPlumbInstance.splice(2, cardInfo.thisNumberInstance);
+      jsPlumbInstance.splice(cardInfo.thisNumberInstance, cardInfo.thisNumberInstance);
+      /* Проблема с удалением не последнего (+- из середины) слайда.
+        Т.к. удаляется jsPlumbInstance из массива, то при перерисовки соединений
+        в dragmove начинает ссыдаться не на тот инстанс из массива и бьет ошибку.
+        Нужно как то получать текущий слайд и его номер передавать в jsPlumbInstance[].
+      */
       this.onBack();
-      cardInfo. baseCard.remove(cardInfo.activeCardEl);
+      cardInfo.baseCard.remove(cardInfo.activeCardEl);
       cardInfo.baseCard.updateLayout();
       this.chekTotalCard();
     } else if(cardInfo.totalCard >= 1 && cardInfo.activeCard == 1) { console.log('not del card') }
@@ -128,7 +148,14 @@ Ext.define('Card.controller.Main', {
         x: 60, y: 60
       }
     );
-    console.log('svgContainer-'+cardInfo.activeCard)
+    // let grid = Ext.ComponentQuery.query('#'+cardInfo.activeCardId)[0];
+    // let root = grid.getEl().dom;
+    // let rows = Ext.query('td.td-svgGrid', root);
+    // jsPlumbInstance[cardInfo.thisNumberInstance].makeTarget($(rows), {
+    //   isTarget: true,
+    //   isSource: false
+    // });
+    console.log('svgContainer-'+cardInfo.activeCard);
   },
   generateRandomRGBA: function() {
     var o = Math.round, r = Math.random, s = 255;
@@ -151,6 +178,7 @@ Ext.define('Card.controller.Main', {
         dragstart: function() {},
         dragmove: function() {
           let cardInfo = me.onGetBaseCard();
+          /* Ошибка при перерисовки после удаления слайда из середины */
           jsPlumbInstance[cardInfo.thisNumberInstance].repaintEverything();
         },
         dragend: function(source, info) {
@@ -195,6 +223,7 @@ Ext.define('Card.controller.Main', {
         dragstart: function() {},
         dragmove: function(source, info, event, eOpts) {
           let cardInfo = me.onGetBaseCard();
+          /* Ошибка при перерисовки после удаления слайда из середины */
           jsPlumbInstance[cardInfo.thisNumberInstance].repaintEverything();
         },
         dragend: function(source, info) {
