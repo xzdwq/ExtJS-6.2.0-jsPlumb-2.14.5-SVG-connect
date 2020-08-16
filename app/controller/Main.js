@@ -17,8 +17,12 @@ Ext.define('Card.controller.Main', {
   onBaseCardinit: function() {
     this.chekTotalCard();
     let cardInfo = this.onGetBaseCard();
-    jsPlumbInstance.push(jsPlumb.getInstance({uuids: cardInfo.thisNumberInstance}));
+    console.log(cardInfo.activeCardId)
+    jsPlumbInstance.push(jsPlumb.getInstance({uuids: cardInfo.thisNumberInstance, Container: cardInfo.activeCardId}));
     jsPlumbInstance[cardInfo.thisNumberInstance].importDefaults(cardInfo.defaultsStyle);
+    jsPlumbInstance[cardInfo.thisNumberInstance].bind('click', function (connection, e) {
+      jsPlumbInstance[cardInfo.thisNumberInstance].deleteConnection(connection);
+    });
   },
   onGetBaseCard: function() {
     let defaultsStyle = {
@@ -26,7 +30,7 @@ Ext.define('Card.controller.Main', {
         curviness: 50
       }],
       Anchor: 'AutoDefault',
-      Endpoints : [[ 'Dot', { radius: 7 } ], [ 'Dot', { radius: 7 } ]],
+      Endpoints : [[ 'Dot', { radius: 3 } ], [ 'Rectangle', { radius: 3 } ]],
       EndpointStyles : [{ fill: '#225588' }, { fill: '#558822' }],
       ConnectionOverlays: [
         ['Arrow', {
@@ -41,6 +45,7 @@ Ext.define('Card.controller.Main', {
         stroke: '#225588'
       },
       HoverPaintStyle: {
+        strokeWidth: 3,
         strokeStyle: '#1e8151',
         lineWidth: 2
       }
@@ -98,7 +103,7 @@ Ext.define('Card.controller.Main', {
     cardInfo.baseLayout.setActiveItem(cardInfo.totalCard);
     this.chekTotalCard();
     cardInfo = this.onGetBaseCard();
-    jsPlumbInstance.push(jsPlumb.getInstance({uuids: cardInfo.thisNumberInstance}));
+    jsPlumbInstance.push(jsPlumb.getInstance({uuids: cardInfo.thisNumberInstance, Container: cardInfo.activeCardId}));
     jsPlumbInstance[cardInfo.thisNumberInstance].importDefaults(cardInfo.defaultsStyle);
     console.log(jsPlumbInstance)
   },
@@ -148,13 +153,13 @@ Ext.define('Card.controller.Main', {
         x: 60, y: 60
       }
     );
-    // let grid = Ext.ComponentQuery.query('#'+cardInfo.activeCardId)[0];
-    // let root = grid.getEl().dom;
-    // let rows = Ext.query('td.td-svgGrid', root);
-    // jsPlumbInstance[cardInfo.thisNumberInstance].makeTarget($(rows), {
-    //   isTarget: true,
-    //   isSource: false
-    // });
+    let grid = Ext.ComponentQuery.query('#'+cardInfo.activeCardId)[0];
+    let root = grid.getEl().dom;
+    let rows = Ext.query('td.td-svgGrid', root);
+    jsPlumbInstance[cardInfo.thisNumberInstance].makeTarget($(rows), {
+      isTarget: true,
+      isSource: false
+    });
     console.log('svgContainer-'+cardInfo.activeCard);
   },
   generateRandomRGBA: function() {
@@ -199,11 +204,12 @@ Ext.define('Card.controller.Main', {
         x: 660, y: 270
       }
     );
-    jsPlumbInstance[cardInfo.thisNumberInstance].connect({
-      source: 'svgDescription-'+cardInfo.activeCard+'-'+cardInfo.countItemCard,
-      target: $('.svgContainer-'+cardInfo.activeCard),
-      scope: 'someScope'
-    });
+    // jsPlumbInstance[cardInfo.thisNumberInstance].connect({
+    //   source: 'svgDescription-'+cardInfo.activeCard+'-'+cardInfo.countItemCard,
+    //   target: $('.svgContainer-'+cardInfo.activeCard),
+    //   scope: 'someScope'
+    // });
+    jsPlumbInstance[cardInfo.thisNumberInstance].addEndpoint('svgDescription-'+cardInfo.activeCard+'-'+cardInfo.countItemCard, { uuids: 'svgDescription-'+cardInfo.activeCard+'-'+cardInfo.countItemCard, isSource: true });
     console.log('svgDescription-'+cardInfo.activeCard)
   },
   onSvgDescriptionControl: function(el) {
@@ -248,9 +254,7 @@ Ext.define('Card.controller.Main', {
   },
   onCheckInsctance: function() {
     let cardInfo = this.onGetBaseCard();
-    let allInstanceConnections = jsPlumbInstance[cardInfo.thisNumberInstance].getConnections({
-      scope: 'someScope'
-    });
+    let allInstanceConnections = jsPlumbInstance[cardInfo.thisNumberInstance].getConnections();
     console.log('uuids_ist::'+jsPlumbInstance[cardInfo.thisNumberInstance].Defaults.uuids);
     // console.log(jsPlumbInstance[cardInfo.thisNumberInstance]);
     console.log(allInstanceConnections);
