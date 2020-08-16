@@ -28,9 +28,9 @@ Ext.define('Card.controller.Main', {
   onGetBaseCard: function() {
     let baseCard = Ext.ComponentQuery.query('#baseCard')[0];
     let baseLayout = baseCard.getLayout();
-    let activCardId = baseLayout.getActiveItem().id;
-    let activeCard = activCardId.split('card-')[1];
-    let activeCardEl = Ext.ComponentQuery.query('#'+activCardId)[0];
+    let activeCardId = baseLayout.getActiveItem().id;
+    let activeCard = activeCardId.split('card-')[1];
+    let activeCardEl = Ext.ComponentQuery.query('#'+activeCardId)[0];
     let totalCard = baseLayout.activeItemCount;
     let newCardNumber = totalCard + 1;
     let thisNumberInstance = activeCard;
@@ -38,7 +38,7 @@ Ext.define('Card.controller.Main', {
       baseCard: baseCard,
       baseLayout: baseLayout,
       activeCard: activeCard,
-      activCardId: activCardId,
+      activeCardId: activeCardId,
       countItemCard: activeCardEl.items.items.length,
       totalCard: totalCard,
       newCardNumber: newCardNumber,
@@ -85,10 +85,23 @@ Ext.define('Card.controller.Main', {
       }],
       Anchors: ['BottomCenter', 'TopCenter']
     });
+    console.log(jsPlumbInstance)
   },
   onDelCard: function() {
     let cardInfo = this.onGetBaseCard();
     if(cardInfo.totalCard > 1 && cardInfo.activeCard > 1) {
+      let allInstanceConnections = jsPlumbInstance[cardInfo.thisNumberInstance].getConnections({
+        scope: 'someScope'
+      });
+      if (allInstanceConnections.length > 0) {
+        for(var i=0; i < allInstanceConnections.length; i++) {
+          jsPlumbInstance[cardInfo.thisNumberInstance].deleteConnection(allInstanceConnections[i]);
+        }
+        jsPlumbInstance[cardInfo.thisNumberInstance].deleteEveryEndpoint();
+        jsPlumbInstance[cardInfo.thisNumberInstance].remove($('.svgDescription-'+cardInfo.activeCard));
+        console.log(jsPlumbInstance[cardInfo.thisNumberInstance].getManagedElements())
+      }
+      jsPlumbInstance.splice(2, cardInfo.thisNumberInstance);
       this.onBack();
       cardInfo. baseCard.remove(cardInfo.activeCardEl);
       cardInfo.baseCard.updateLayout();
@@ -99,9 +112,9 @@ Ext.define('Card.controller.Main', {
     let cardInfo = this.onGetBaseCard();
     let svgGrid = '<table class="svgGrid">';
     for(let tr = 0; tr < 30; tr++) {
-      svgGrid += '<tr class="tr-svgGrid tr-svgGrid-'+cardInfo.totalCard+'-'+tr+'">';
+      svgGrid += '<tr class="tr-svgGrid tr-svgGrid-'+cardInfo.activeCard+'-'+tr+'">';
       for(let td = 0; td < 30; td++) {
-        svgGrid += '<td class="td-svgGrid td-svgGrid-'+cardInfo.totalCard+'-'+td+'-'+tr+'"></td>';
+        svgGrid += '<td class="td-svgGrid td-svgGrid-'+cardInfo.activeCard+'-'+td+'-'+tr+'"></td>';
       }
       svgGrid += '</tr>';
     }
@@ -109,12 +122,13 @@ Ext.define('Card.controller.Main', {
     cardInfo.activeCardEl.add(
       {
         xtype: 'svgContainer',
-        cls: 'svgContainer-'+cardInfo.totalCard,
-        itemId: 'svgContainer-'+cardInfo.totalCard,
-        html: '<div class="svgDraw-'+cardInfo.totalCard+'"><svg><rect width="100%" height="100%" style="fill:'+this.generateRandomRGBA()+';stroke-width:40;stroke:rgb(102,102,102)" /></svg></div>'+svgGrid,
+        cls: 'svgContainer-'+cardInfo.activeCard,
+        itemId: 'svgContainer-'+cardInfo.activeCard,
+        html: '<div class="svgDraw-'+cardInfo.activeCard+'"><svg><rect width="100%" height="100%" style="fill:'+this.generateRandomRGBA()+';stroke-width:40;stroke:rgb(102,102,102)" /></svg></div>'+svgGrid,
         x: 60, y: 60
       }
-    )
+    );
+    console.log('svgContainer-'+cardInfo.activeCard)
   },
   generateRandomRGBA: function() {
     var o = Math.round, r = Math.random, s = 255;
@@ -152,16 +166,17 @@ Ext.define('Card.controller.Main', {
     cardInfo.activeCardEl.add(
       {
         xtype: 'svgDescription',
-        cls: 'svgDescription-'+cardInfo.activCardId,
-        id: 'svgDescription-'+cardInfo.activCardId+'-'+cardInfo.countItemCard,
+        cls: 'svgDescription-'+cardInfo.activeCard,
+        id: 'svgDescription-'+cardInfo.activeCard+'-'+cardInfo.countItemCard,
         x: 660, y: 270
       }
     );
     jsPlumbInstance[cardInfo.thisNumberInstance].connect({
-      source: 'svgDescription-'+cardInfo.activCardId+'-'+cardInfo.countItemCard,
+      source: 'svgDescription-'+cardInfo.activeCard+'-'+cardInfo.countItemCard,
       target: $('.svgContainer-'+cardInfo.activeCard),
       scope: 'someScope'
     });
+    console.log('svgDescription-'+cardInfo.activeCard)
   },
   onSvgDescriptionControl: function(el) {
     var me = this;
@@ -192,6 +207,12 @@ Ext.define('Card.controller.Main', {
   },
   onRefreshCard: function() {
     let cardInfo = this.onGetBaseCard();
+    let allInstanceConnections = jsPlumbInstance[cardInfo.thisNumberInstance].getConnections({
+      scope: 'someScope'
+    });
+    if (allInstanceConnections.length > 0) {
+      jsPlumbInstance[cardInfo.thisNumberInstance].deleteEveryEndpoint();
+    }
     while (cardInfo.activeCardEl.items.items[0]) {
       cardInfo.activeCardEl.remove(cardInfo.activeCardEl.items.items[0]);
     }
@@ -203,6 +224,6 @@ Ext.define('Card.controller.Main', {
     });
     console.log('uuids_ist::'+jsPlumbInstance[cardInfo.thisNumberInstance].Defaults.uuids);
     // console.log(jsPlumbInstance[cardInfo.thisNumberInstance]);
-    //console.log(allInstanceConnections);
+    console.log(allInstanceConnections);
   }
 });
