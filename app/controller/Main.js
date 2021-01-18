@@ -287,7 +287,7 @@ Ext.define('Card.controller.Main', {
       });
       doc.end();
     } else {
-      console.log('add svg draw to page');
+      console.log('add svg draw to page (svgDraw.length <= 0)');
     }
   }
 });
