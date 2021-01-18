@@ -33,6 +33,11 @@ Ext.define('Card.view.PanelSetting', {
       handler: 'onAddDesc'
     },
     {
+      text: 'to PDF',
+      cls: 'toPdf',
+      handler: 'onToPdf'
+    },
+    {
       text: 'RefreshCard',
       cls: 'refreshCard',
       handler: 'onRefreshCard'

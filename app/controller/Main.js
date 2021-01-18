@@ -135,32 +135,43 @@ Ext.define('Card.controller.Main', {
   },
   onAddSVG: function() {
     let cardInfo = this.onGetBaseCard();
-    let svgGrid = '<table class="svgGrid">';
-    for(let tr = 0; tr < 30; tr++) {
-      svgGrid += '<tr class="tr-svgGrid tr-svgGrid-'+cardInfo.activeCard+'-'+tr+'">';
-      for(let td = 0; td < 30; td++) {
-        svgGrid += '<td class="td-svgGrid td-svgGrid-'+cardInfo.activeCard+'-'+td+'-'+tr+'"></td>';
+    Ext.Ajax.request({
+      url: 'img/svg.json',
+      success: function(response, opts) {
+        let xml = response.responseText;
+
+        let svgGrid = '<table class="svgGrid">';
+        for(let tr = 0; tr < 30; tr++) {
+          svgGrid += '<tr class="tr-svgGrid tr-svgGrid-'+cardInfo.activeCard+'-'+tr+'">';
+          for(let td = 0; td < 30; td++) {
+            svgGrid += '<td class="td-svgGrid td-svgGrid-'+cardInfo.activeCard+'-'+td+'-'+tr+'"></td>';
+          }
+          svgGrid += '</tr>';
+        }
+        svgGrid += '</table>';
+        cardInfo.activeCardEl.add(
+          {
+            xtype: 'svgContainer',
+            cls: 'svgContainer-'+cardInfo.activeCard,
+            itemId: 'svgContainer-'+cardInfo.activeCard,
+            //html: '<div class="svgDraw-'+cardInfo.activeCard+'"><svg><rect width="100%" height="100%" style="fill:'+this.generateRandomRGBA()+';stroke-width:40;stroke:rgb(102,102,102)" /></svg></div>'+svgGrid,
+            html: '<div id="svgDraw-'+cardInfo.activeCard+'" class="svgDraw-'+cardInfo.activeCard+'">'+xml+'</div>'+svgGrid,
+            x: 60, y: 60
+          }
+        );
+        let grid = Ext.ComponentQuery.query('#'+cardInfo.activeCardId)[0];
+        let root = grid.getEl().dom;
+        let rows = Ext.query('td.td-svgGrid', root);
+        jsPlumbInstance[cardInfo.thisNumberInstance].makeTarget($(rows), {
+          isTarget: true,
+          isSource: false
+        });
+        console.log('svgContainer-'+cardInfo.activeCard);
+      },
+      failure: function(response, opts) {
+        console.log(response);
       }
-      svgGrid += '</tr>';
-    }
-    svgGrid += '</table>';
-    cardInfo.activeCardEl.add(
-      {
-        xtype: 'svgContainer',
-        cls: 'svgContainer-'+cardInfo.activeCard,
-        itemId: 'svgContainer-'+cardInfo.activeCard,
-        html: '<div class="svgDraw-'+cardInfo.activeCard+'"><svg><rect width="100%" height="100%" style="fill:'+this.generateRandomRGBA()+';stroke-width:40;stroke:rgb(102,102,102)" /></svg></div>'+svgGrid,
-        x: 60, y: 60
-      }
-    );
-    let grid = Ext.ComponentQuery.query('#'+cardInfo.activeCardId)[0];
-    let root = grid.getEl().dom;
-    let rows = Ext.query('td.td-svgGrid', root);
-    jsPlumbInstance[cardInfo.thisNumberInstance].makeTarget($(rows), {
-      isTarget: true,
-      isSource: false
     });
-    console.log('svgContainer-'+cardInfo.activeCard);
   },
   generateRandomRGBA: function() {
     var o = Math.round, r = Math.random, s = 255;
@@ -258,5 +269,25 @@ Ext.define('Card.controller.Main', {
     console.log('uuids_ist::'+jsPlumbInstance[cardInfo.thisNumberInstance].Defaults.uuids);
     // console.log(jsPlumbInstance[cardInfo.thisNumberInstance]);
     console.log(allInstanceConnections);
+  },
+  onToPdf: function() {
+    let cardInfo = this.onGetBaseCard();
+    let svgDraw = document.querySelectorAll('#svgDraw-'+cardInfo.activeCard+' > svg');
+    if(svgDraw.length > 0) {
+      let doc = new window.PDFDocument({compress: false});
+      let svg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">' + svgDraw[0].outerHTML + '</svg>';
+      // console.log(svg);
+      SVGtoPDF(doc, svg, 20, 20);
+      // console.log(navigator);
+      let stream = doc.pipe(blobStream());
+      stream.on('finish', function() {
+        let blob = stream.toBlob('application/pdf');
+        var blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl);
+      });
+      doc.end();
+    } else {
+      console.log('add svg draw to page');
+    }
   }
 });
