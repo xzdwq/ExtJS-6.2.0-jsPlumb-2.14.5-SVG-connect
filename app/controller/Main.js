@@ -273,6 +273,8 @@ Ext.define('Card.controller.Main', {
   onToPdf: function() {
     let cardInfo = this.onGetBaseCard();
     let svgDraw = document.querySelectorAll('#svgDraw-'+cardInfo.activeCard+' > svg');
+    // let svgDesc = document.querySelectorAll('#svgDescription-1-1');
+    // console.log(svgDesc[0].outerHTML)
     if(svgDraw.length > 0) {
       let doc = new window.PDFDocument({compress: false});
       let svg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">' + svgDraw[0].outerHTML + '</svg>';
@@ -289,5 +291,24 @@ Ext.define('Card.controller.Main', {
     } else {
       console.log('add svg draw to page (svgDraw.length <= 0)');
     }
+  },
+  onTcPdf: function() {
+    Ext.create('Ext.window.Window', {
+      autoShow: true,
+      title: 'TCPdf',
+      height: '90%',
+      width: '90%',
+      layout: 'fit',
+      items: [{
+        xtype: 'component',
+        autoEl: {
+            tag: 'iframe',
+            width: '100%',
+            height: '100%',
+            src: 'app/phps/tcpdf.php',
+            scrolling: 'yes'
+        }
+      }]
+    })
   }
 });
