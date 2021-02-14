@@ -310,5 +310,20 @@ Ext.define('Card.controller.Main', {
         }
       }]
     })
+  },
+  onCanvasPdf: function() {
+    html2canvas(document.body, {
+      onrendered: function (canvas) {
+          new Ext.Window({
+              title: 'Screenshot',
+              width: '95%',
+              height: '95%',
+              resizable: true,
+              autoScroll: true,
+              preventBodyReset: true,
+              html: '<img src="' +canvas.toDataURL("image/png") +'" height="1000"/>'
+          }).show();
+      }
+    });
   }
 });

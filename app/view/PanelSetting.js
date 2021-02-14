@@ -43,6 +43,11 @@ Ext.define('Card.view.PanelSetting', {
       handler: 'onTcPdf'
     },
     {
+      text: 'html2canvas',
+      cls: 'tcPdf',
+      handler: 'onCanvasPdf'
+    },
+    {
       text: 'RefreshCard',
       cls: 'refreshCard',
       handler: 'onRefreshCard'
